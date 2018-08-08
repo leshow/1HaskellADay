@@ -26,7 +26,7 @@ import           Data.ByteString.Lazy.Char8     ( ByteString )
 import qualified Data.ByteString.Lazy.Char8    as BSL
 import           Data.Map                       ( Map )
 import qualified Data.Map                      as Map
-import           Data.Maybe                     ( isJust )
+import           Data.Monoid                    ( (<>) )
 -- or, better yet, you do that.
 
 exDir, dict :: FilePath
@@ -109,5 +109,9 @@ pruneDictionary = Map.filter notEmpty
   where
     notEmpty (fromJSON @(Map String String) -> Success ms) =
         not . Map.null $ ms
+    notEmpty _ = error "I hate these"
 
 -- Of the original 4614 entries you loaded in, how many entries have data?
+sizeOf =
+    length . pruneDictionary . fst . partitionDictionary <$> loadDictionary
+        (exDir <> dict)

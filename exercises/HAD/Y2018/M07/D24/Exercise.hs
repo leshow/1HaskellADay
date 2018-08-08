@@ -1,4 +1,7 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications  #-}
+{-# LANGUAGE ViewPatterns      #-}
 
 module Y2018.M07.D24.Exercise where
 
@@ -8,7 +11,7 @@ There are a couple of things to do with today's Haskell exercise.
 There's a JSON file associated with this exercise. I'd show you the first
 few lines, but I can't because the file:
 
-$ wc Y2018/M07/D24/disambiguation_full_25.json 
+$ wc Y2018/M07/D24/disambiguation_full_25.json
        0  178958 1403669 Y2018/M07/D24/disambiguation_full_25.json
 
 apparently has '0' lines (one line, no line-feed).
@@ -17,12 +20,13 @@ But I will show you the first few characters so you can get an idea of the
 structure.
 --}
 
-import Data.Aeson
-import Data.Aeson.Encode.Pretty
-import Data.ByteString.Lazy.Char8 (ByteString)
-import Data.Map
-import qualified Data.Map as Map
-
+import           Data.Aeson
+import           Data.Aeson.Encode.Pretty
+import           Data.ByteString.Lazy.Char8     ( ByteString )
+import qualified Data.ByteString.Lazy.Char8    as BSL
+import           Data.Map                       ( Map )
+import qualified Data.Map                      as Map
+import           Data.Maybe                     ( isJust )
 -- or, better yet, you do that.
 
 exDir, dict :: FilePath
@@ -32,14 +36,14 @@ dict = "disambiguation_full_25.json"
 -- Write a function that gives you the first n bytes of a file:
 
 firstNBytes :: Int -> FilePath -> IO ByteString
-firstNBytes n file = undefined
+firstNBytes n file = BSL.take (fromIntegral n) <$> BSL.readFile file
 
 {--
 What are the first 250 bytes of this file?
 
 >>> firstNBytes 250 (exDir ++ dict)
 "{\"Freshwater mangrove\": {}, \"Mango-pine\": {}, \"Heather Smith\": {\"Heath
-er Smith (author)\": \"Heather Smith  author   Australian author\", \"Heather 
+er Smith (author)\": \"Heather Smith  author   Australian author\", \"Heather
 Smith (curler)\": \"Heather Smith  curler    born 1972  Canadian Curler\", \"H
 eather Smith (public servant)\": "
 
@@ -54,21 +58,28 @@ elements that are not mappings?
 type Dictionary = Map String Value
 
 loadDictionary :: FilePath -> IO Dictionary
-loadDictionary file = undefined
+loadDictionary file = do
+    json <- decode <$> BSL.readFile file
+    case json of
+        Just r  -> pure r
+        Nothing -> error "This is a partial function and I don't like it"
 
 partitionDictionary :: Dictionary -> (Dictionary, Dictionary)
-partitionDictionary dict = undefined
-
+partitionDictionary = Map.partition isObject
+  where
+    isObject :: Value -> Bool
+    isObject (Object _) = True
+    isObject _          = False
 {--
 >>> dic <- loadDictionary (exDir ++ dict)
 >>> length dic
 4614
 
 >>> (dics,nondics) = partitionDictionary dic
->>> length nondics 
+>>> length nondics
 343
 
-That's quite a few entries! 
+That's quite a few entries!
 
 What are these nondics?
 
@@ -79,7 +90,11 @@ Huh. Are there any that are not null?
 --}
 
 nonNulls :: Dictionary -> Dictionary
-nonNulls nondics = undefined
+nonNulls = Map.filter
+    (\case
+        Null -> False
+        _    -> True
+    )
 
 {--
 >>> length (nonNulls nondics)
@@ -90,6 +105,9 @@ we can get rid of the entries that have empty maps. Let's do that.
 --}
 
 pruneDictionary :: Dictionary -> Dictionary
-pruneDictionary dics = undefined
+pruneDictionary = Map.filter notEmpty
+  where
+    notEmpty (fromJSON @(Map String String) -> Success ms) =
+        not . Map.null $ ms
 
 -- Of the original 4614 entries you loaded in, how many entries have data?

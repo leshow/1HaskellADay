@@ -2,8 +2,10 @@
 
 module Y2018.M08.D03.Exercise where
 
-import Data.Aeson
-import Data.Aeson.Encode.Pretty (encodePretty)
+import           Data.Aeson
+import           Data.Aeson.Encode.Pretty       ( encodePretty )
+import           Data.ByteString.Lazy.Char8     ( ByteString )
+import qualified Data.ByteString.Lazy.Char8    as BL
 
 {--
 Another 'discovering the structure of JSON' Haskell exercise today.
@@ -12,13 +14,14 @@ You have the follow JSON file:
 --}
 
 exDir, newsJSON :: FilePath
-exDir = "Y2018/M08/D03/"
+exDir = "exercises/HAD/Y2018/M08/D03/"
 newsJSON = "news.json"
 
 -- 1. read in the JSON (unprettified) and write it out as pretty JSON
 
 prettify :: FilePath -> FilePath -> IO ()
-prettify unprettyIn prettyOut = undefined
+prettify unprettyIn prettyOut =
+    (encodePretty . decode <$> readFile unPrettyIn) >>= writeFile prettyOut
 
 -- this function may be helpful for solving prettify ...
 
@@ -29,9 +32,14 @@ listVals = fromJust . decode
 
 -- ... or ... that's a tough question, let's take this approach, instead:
 
-data Article = Art { author :: String, image :: FilePath, url :: FilePath
-                     published, updated :: Date, article :: String, 
-                     idx :: Integer, summary, title :: String }
+data Article = Art {
+    author               :: String
+    , image              :: FilePath
+    , url                :: FilePath
+    , published, updated :: Date
+    , article            :: String
+    , idx                :: Integer
+    , summary, title     :: String }
    deriving (Eq, Show)
 
 {--

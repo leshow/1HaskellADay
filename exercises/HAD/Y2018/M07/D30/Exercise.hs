@@ -1,6 +1,7 @@
 module Y2018.M07.D30.Exercise where
 
-import Data.Set (Set)
+import           Data.Set                       ( Set )
+import qualified Data.Set                      as Set
 
 -- We have two databases
 
@@ -19,7 +20,11 @@ type Table = String
 type Database = Set Table
 
 readDatabase :: FilePath -> IO Database
-readDatabase file = undefined
+readDatabase file = Set.fromList . drop 2 . lines <$> readFile file
 
 sharedTables :: Database -> Database -> Set Table
-sharedTables db1 db2 = undefined
+sharedTables = Set.intersection
+
+
+diffTables :: Database -> Database -> Set Table
+diffTables = Set.difference

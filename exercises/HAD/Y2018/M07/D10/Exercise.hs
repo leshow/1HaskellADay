@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Y2018.M07.D10.Exercise where
-
 {--
 So, yesterday we explored JSON structure
 
@@ -13,9 +12,10 @@ one to another.
 Because, like XML, JSON is all about transformation, baybee!
 --}
 
-import Data.Aeson
-import Data.Aeson.Encode.Pretty (encodePretty)
-import Data.Map (Map)
+import           Data.Aeson
+import           Data.Aeson.Encode.Pretty       ( encodePretty )
+import           Data.Map                       ( Map )
+import           Data.Monoid                    ( (<>) )
 
 -- the input JSON (being output from an analysis tool)
 
@@ -34,11 +34,17 @@ where:
 --}
 
 data Wiki = Wikt { wname, wtitle, wurl :: String,
-                   wtext, wsum, wimg :: Maybe String }
+                   wtext, wsum, wimg   :: Maybe String }
    deriving Show
 
 instance FromJSON Wiki where
-   parseJSON (Object o) = undefined
+   parseJSON (Object o) = Wikt
+    <$> o .: "Entity"
+    <*> o .: "Page_title"
+    <*> o .: "WikiUrl"
+    <*> o .: "Full_text"
+    <*> o .: "WikiSummary"
+    <*> o .: "WikiImg"
 
 type EntityName = String
 
@@ -50,7 +56,7 @@ data Analysis = Ysis { wikt :: Wiki, scores :: [Value], query :: Double }
    deriving Show
 
 {--
-Now, you would think this would Just Work(tm). And it would, if this were 
+Now, you would think this would Just Work(tm). And it would, if this were
 well-structured JSON.
 
 But it's not well-structured JSON. Check out this embedded entry:
@@ -70,7 +76,7 @@ data ProtoAnalysis = PA { paWik :: Maybe Wiki, paScores, paQuery :: Value }
    deriving Show
 
 instance FromJSON ProtoAnalysis where
-   parseJSON (Object o) = undefined
+   parseJSON (Object o) = PA <$> o .:? "wiki_info" <*> o .: "scores" <*> o .: "query_entity_score"
 
 readProto :: FilePath -> IO (Map EntityName ProtoAnalysis)
 readProto file = undefined
@@ -86,3 +92,11 @@ readInputJSON :: FilePath -> IO Input
 readInputJSON file = undefined
 
 -- What is your result? How many entries does your Input Map have?
+
+permute :: String -> [String]
+permute s = go s ""
+  where
+    go ""       ret = [reverse ret]
+    go (x : xs) ret = if x == '?'
+        then go xs ('1' : ret) <> go xs ('0' : ret)
+        else go xs (x : ret)

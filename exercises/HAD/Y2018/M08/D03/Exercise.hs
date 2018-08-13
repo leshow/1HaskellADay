@@ -53,11 +53,11 @@ instance FromJSON Article where
         imageO <- v .: "image"
         image <- imageO .: "url"
         url <- v .: "link"
-        article <- ((v .: "content") >>= (.: "rendered")) -- instead of using articleO
+        article <- (v .: "content") >>= (.: "rendered") -- instead of using articleO
         idx <- v .: "id"
         summary <- v .: "lede"
         title <- v .: "title"
-        pure $ Art {author,url, image, article, summary, idx, title}
+        pure Art {author,url, image, article, summary, idx, title}
 
 instance ToJSON Article where
     toJSON Art {author,image,url,article,idx,summary,title} = object

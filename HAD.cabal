@@ -32,4 +32,7 @@ executable 1had
                      , mtl
                      , postgresql-simple
                      , containers
+                     , scientific
+                     , text
+                     , vector
   hs-source-dirs:      src, exercises/HAD

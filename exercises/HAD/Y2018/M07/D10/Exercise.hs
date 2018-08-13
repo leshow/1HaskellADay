@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Y2018.M07.D10.Exercise where
@@ -14,13 +15,17 @@ Because, like XML, JSON is all about transformation, baybee!
 
 import           Data.Aeson
 import           Data.Aeson.Encode.Pretty       ( encodePretty )
+import qualified Data.ByteString.Lazy          as BL
 import           Data.Map                       ( Map )
+import qualified Data.Map                      as M
+import           Data.Maybe                     ( fromJust )
 import           Data.Monoid                    ( (<>) )
-
+import           Data.Scientific                ( toRealFloat )
+import           Data.Vector                    ( toList )
 -- the input JSON (being output from an analysis tool)
 
 exDir, input :: FilePath
-exDir = "Y2018/M07/D10/"
+exDir = "exercises/HAD/Y2018/M07/D10/"
 input = "output.json"
 
 -- yeah, the input is the output of the analysis tool. Deal.
@@ -41,7 +46,7 @@ instance FromJSON Wiki where
    parseJSON (Object o) = Wikt
     <$> o .: "Entity"
     <*> o .: "Page_title"
-    <*> o .: "WikiUrl"
+    <*> o .: "WikiURL"
     <*> o .: "Full_text"
     <*> o .: "WikiSummary"
     <*> o .: "WikiImg"
@@ -78,21 +83,26 @@ data ProtoAnalysis = PA { paWik :: Maybe Wiki, paScores, paQuery :: Value }
 instance FromJSON ProtoAnalysis where
    parseJSON (Object o) = PA <$> o .:? "wiki_info" <*> o .: "scores" <*> o .: "query_entity_score"
 
-readProto :: FilePath -> IO (Map EntityName ProtoAnalysis)
-readProto file = undefined
+readProto :: FilePath -> IO (Map EntityName ProtoAnalysis) -- we should decode with Maybe so we don't throw exceptions
+readProto file = fromJust . decode <$> BL.readFile file
 
 -- That will work. Now we convert a Proto to Analysis
-
 proto2analysis :: ProtoAnalysis -> Maybe Analysis
-proto2analysis prot = undefined
+proto2analysis PA { paWik = Nothing } = Nothing
+proto2analysis PA { paWik = Just wiki, paScores = Array arr, paQuery = Number q }
+    = Just $ Ysis wiki (toList arr) (toRealFloat q)
 
 -- then we sequence the result to get our Input value from the JSON
 
 readInputJSON :: FilePath -> IO Input
-readInputJSON file = undefined
+readInputJSON file = do
+    map <- readProto file
+    pure $ M.mapMaybe proto2analysis map
 
 -- What is your result? How many entries does your Input Map have?
 
+
+-- goofing around:
 permute :: String -> [String]
 permute s = go s ""
   where

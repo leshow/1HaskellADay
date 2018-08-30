@@ -11,7 +11,7 @@ f88063e4-94d3-11e8-81a7-7310897d834f
 --}
 
 distill2UUID :: String -> String
-distill2UUID url = undefined
+distill2UUID = takeWhile (/= '_') . drop 1 . dropWhile (/= '.') . reverse
 
 -- do it for the following urls:
 

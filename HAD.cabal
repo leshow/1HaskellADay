@@ -16,6 +16,9 @@ category:            Development
 build-type:          Simple
 cabal-version:       >=1.8
 
+-- library
+--   exposed-modules:     exercises/HAD
+
 executable 1had
   main-is:             Main.hs
   build-depends:       base
@@ -35,4 +38,7 @@ executable 1had
                      , scientific
                      , text
                      , vector
+                     , comonad
+                     , array
+  other-modules:       HAD.Date, HAD
   hs-source-dirs:      src, exercises/HAD

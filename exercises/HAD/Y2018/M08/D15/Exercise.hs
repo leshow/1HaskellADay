@@ -1,3 +1,5 @@
+{-# LANGUAGE NamedFieldPuns   #-}
+{-# LANGUAGE TypeApplications #-}
 module Y2018.M08.D15.Exercise where
 
 {--
@@ -6,14 +8,14 @@ https://www.wordfrequency.info. We are going to parse this file and answer
 a question.
 --}
 
-import Prelude hiding (Word)
-import Data.Array
-import Data.Map
-
+import qualified Data.Vector                   as V
+import           Data.Vector                    ( Vector )
+import           Data.Map                       ( Map )
+import qualified Data.Map                      as M
+import           Prelude                 hiding ( Word )
 -- below modules available via 1HaskellADay git repository
 
-import Control.Scan.CSV
-import qualified Data.MultiMap as MM
+import           Control.Scan.CSV
 
 exDir, tsvFile :: FilePath
 exDir = "Y2018/M08/D15/"
@@ -34,13 +36,32 @@ data WordFreq = WF { word :: Word, partOfSpeech :: PartOfSpeech,
 
 -- So, our word frequencies:
 
-readWordFreqs :: FilePath -> IO (Array Int WordFreq)
-readWordFreqs file = undefined
+readWordFreqs :: FilePath -> IO (Vector WordFreq)
+readWordFreqs file = do
+    f <- readFile file
+    let words = lines f
+    let wfs   = fmap read words :: [WordFreq]
+    pure $ V.fromList wfs
+
+-- taken from soln.
+convert2WF :: [String] -> [(WordFreq, String)]
+convert2WF [w, p, f, d] = reads f >>= \(freq, _) ->
+    reads d >>= \(disp, _) -> return (WF w (head p) freq disp, "")
+convert2WF _ = []
+
+instance Read WordFreq where
+    readsPrec _ = convert2WF . splitWF
+
+splitWF :: String -> [String]
+splitWF = filter (not . null) . rendBy (== ' ')
 
 -- What is the part-of-speech that has the most words? second most? etc?
-
-partsOfSpeech :: Array Int WordFreq -> Map PartOfSpeech [Word]
+partsOfSpeech :: Vector WordFreq -> Map PartOfSpeech [Word]
 partsOfSpeech wordfreqs = undefined
+    {-V.foldr
+    (\(WF word partOfSpeech _ _) m -> M.insert partOfSpeech word)
+    M.empty
+    wordfreqs-}
 
 -- you can use a multi-map to construct the above result if you'd like
 
@@ -49,7 +70,7 @@ partsOfSpeech wordfreqs = undefined
 
 type Length = Int
 
-nwords :: Array Int WordFreq -> Map Length [Word]
+nwords :: Vector WordFreq -> Map Length [Word]
 nwords wordfreqs = undefined
 
 -- Again, use a multi-map if you'd like

@@ -40,5 +40,7 @@ executable 1had
                      , vector
                      , comonad
                      , array
+                     , directory
+                     , safe-exceptions
   other-modules:       HAD.Date, HAD
   hs-source-dirs:      src, exercises/HAD
